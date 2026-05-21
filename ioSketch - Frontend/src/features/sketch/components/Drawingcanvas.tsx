@@ -103,6 +103,48 @@ const DrawingCanvas: FC = () => {
     setIsDrawing(false);
   };
 
+  const getTouchPos = (e: React.TouchEvent<HTMLCanvasElement>): { x: number; y: number } | null => {
+    if (e.touches.length === 0) return null;
+    const touch = e.touches[0];
+    return {
+      x: touch.clientX - canvasOffsetRef.current.x,
+      y: touch.clientY - canvasOffsetRef.current.y,
+    };
+  };
+
+  const handleTouchStart = (e: React.TouchEvent<HTMLCanvasElement>): void => {
+    e.preventDefault();
+    if (!context) return;
+    const pos = getTouchPos(e);
+    if (!pos) return;
+    saveHistory();
+    setIsDrawing(true);
+    context.beginPath();
+    context.moveTo(pos.x, pos.y);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent<HTMLCanvasElement>): void => {
+    e.preventDefault();
+    if (!isDrawing || !context) return;
+    const pos = getTouchPos(e);
+    if (!pos) return;
+
+    context.lineTo(pos.x, pos.y);
+    context.strokeStyle = isErasing ? '#ffffff' : brushColor;
+    context.lineWidth = brushSize;
+    context.lineCap = 'round';
+    context.lineJoin = 'round';
+    context.stroke();
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent<HTMLCanvasElement>): void => {
+    e.preventDefault();
+    if (context) {
+      context.closePath();
+    }
+    setIsDrawing(false);
+  };
+
   const undo = (): void => {
     if (historyRef.current.length === 0 || !context || !canvasRef.current) return;
     const previousState = historyRef.current.pop();
@@ -263,7 +305,10 @@ const DrawingCanvas: FC = () => {
         onMouseMove={draw}
         onMouseUp={stopDrawing}
         onMouseLeave={stopDrawing}
-        className="relative h-120 md:h-200 w-80 h-2xs sm:w-2xl border-2 border-gray-300 rounded-lg cursor-crosshair bg-white dark:border-gray-600"
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        className="relative h-120 md:h-200 w-80 h-2xs sm:w-2xl border-2 border-gray-300 rounded-lg cursor-crosshair bg-white dark:border-gray-600 touch-none"
       />
     </div>
   );
