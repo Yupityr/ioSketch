@@ -1,0 +1,37 @@
+generator client {
+  provider = "prisma-client-js"
+  engineType = "binary"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id             String   @id @default(uuid())
+  name           String
+  email          String   @unique
+  password       String
+  createdAt      DateTime @default(now())
+  // receivedSketch Sketch[] @relation("recipient")
+  // sentSketch     Sketch[] @relation("sender")
+}
+
+model Sketch {
+  id           String       @id @default(uuid())
+  answer       String
+  hint         String
+  status       answerStatus @default(ANSWERING)
+  sketchURL    String
+  sender_id    String
+  recipient_id String
+  createdAt    DateTime     @default(now())
+  // recipient    User         @relation("recipient", fields: [recipient_id], references: [id])
+  // sender       User         @relation("sender", fields: [sender_id], references: [id])
+}
+
+enum answerStatus {
+  ANSWERED
+  ANSWERING
+  FORFEIT
+}
